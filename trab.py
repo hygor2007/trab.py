@@ -1,3 +1,5 @@
+--py--
+
 import os
 import json
 
@@ -184,8 +186,7 @@ if __name__ == "__main__":
 
 
 
-
-
+----js-----
 
 
 const http = require('http');
@@ -194,30 +195,23 @@ const porta = 3000;
 const filePath = 'estoque.json';
 
 function lerarquivo(){
-   teste= JSON.parse(fs.readFile(filePath, 'utf8', (err, data) => {
-        if (err) {
-            console.error('Erro ao ler o arquivo:', err);
-            return;
-        }
-
-        // Convertendo o JSON para um objeto JavaScript
-        try {
-            //const jsonData = JSON.parse(data);
-             return data;
-        } catch (err) {
-            console.error('Erro ao converter o arquivo JSON:', err);
-        }
-
-
-    }));
-    console.log(teste);
+    try {
+        const data = fs.readFileSync(filePath, 'utf8'); // Lê o arquivo de forma síncrona 
+        const jsonData = JSON.parse(data); // Converte o conteúdo para JSON 
+        return jsonData; // Retorna os dados
+    }
+    catch (erro) { 
+        console.error('Erro ao ler o arquivo:', erro); 
+        return null; // Retorna null em caso de erro
+    } 
 }
 
 const server = http.createServer((req, res) => {
     res.statusCode = 200;
-    res.setHeader('Content-Type', 'text/plain');
+    res.setHeader('Content-Type', 'text/html');
     estoque = lerarquivo();
-    res.end("<a>"+"</a>");
+    console.log(estoque);
+    res.end("<a>"+estoque.nome+"</a>");
 })
 
 server.listen(porta, () => {
@@ -257,10 +251,6 @@ const server = http.createServer((req, res) => {
 server.listen(porta, () => {
     console.log(`Servidor rodando em http://localhost:${porta}/estoque`);
 });*/
-
-
-
-
 
 
 

@@ -175,3 +175,97 @@ if __name__ == "__main__":
             break
         else:
             print("Opção inválida! Tente novamente.")
+
+
+
+
+
+
+
+
+
+
+
+
+
+const http = require('http');
+const fs = require('fs');
+const porta = 3000;
+const filePath = 'estoque.json';
+
+function lerarquivo(){
+   teste= JSON.parse(fs.readFile(filePath, 'utf8', (err, data) => {
+        if (err) {
+            console.error('Erro ao ler o arquivo:', err);
+            return;
+        }
+
+        // Convertendo o JSON para um objeto JavaScript
+        try {
+            //const jsonData = JSON.parse(data);
+             return data;
+        } catch (err) {
+            console.error('Erro ao converter o arquivo JSON:', err);
+        }
+
+
+    }));
+    console.log(teste);
+}
+
+const server = http.createServer((req, res) => {
+    res.statusCode = 200;
+    res.setHeader('Content-Type', 'text/plain');
+    estoque = lerarquivo();
+    res.end("<a>"+"</a>");
+})
+
+server.listen(porta, () => {
+    console.log(`Servidor rodando em http://localhost:${porta}/`);
+})
+
+/*
+function carregarEstoque() {
+    try {
+        const data = fs.readFileSync(filePath, 'utf8');
+        return JSON.parse(data);
+    } catch (error) {
+        console.error('Erro ao carregar o estoque:', error);
+        return {
+            //Estoque padrão
+        };
+    }
+}
+
+function criarResposta(res, statusCode, contentType, data) {
+    res.statusCode = statusCode;
+    res.setHeader('Content-Type', contentType);
+    //const estoque = carregarEstoque();
+    //console.log(estoque);
+    res.end("oi");
+}
+
+const server = http.createServer((req, res) => {
+    if (req.url === '/estoque' && req.method === 'GET') {
+       //const estoque = carregarEstoque();
+        criarResposta(res, 200, 'application/json', e);
+    } else {
+        criarResposta(res, 404, 'text/plain', { error: 'Rota não encontrada' });
+    }
+});
+
+server.listen(porta, () => {
+    console.log(`Servidor rodando em http://localhost:${porta}/estoque`);
+});*/
+
+
+
+
+
+
+
+
+
+{
+    "nome": "hygor"
+}

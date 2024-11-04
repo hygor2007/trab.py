@@ -1,4 +1,4 @@
---py--
+-py-
 
 import os
 import json
@@ -178,16 +178,7 @@ if __name__ == "__main__":
         else:
             print("Opção inválida! Tente novamente.")
 
-
-
-
-
-
-
-
-
-----js-----
-
+-js-
 
 const http = require('http');
 const fs = require('fs');
@@ -256,6 +247,9 @@ server.listen(porta, () => {
 
 
 
+
+
 {
-    "nome": "hygor"
+    "nome": "" 
+    
 }

@@ -1,11 +1,12 @@
 -py-
-
 import os
 import json
 
+# Função para limpar a tela (depende do sistema operacional)
 def limpar_tela():
     os.system('cls' if os.name == 'nt' else 'clear')
 
+# Função para exibir o menu de sabores
 def menu_sabores(estoque):
     sabores = ["Chocolate", "Morango", "Baunilha", "Floresta Negra", "Limão", "Coco", "Pistache", "Caramelo"]
     print("Sabores disponíveis:")
@@ -14,29 +15,48 @@ def menu_sabores(estoque):
         print(f"{i}. {sabor} (Estoque: {quantidade})")
     return sabores
 
+# Função para coleta de dados de entrega
 def coleta_dados_entrega():
     rua = input("Digite o nome da rua: ")
     numero = input("Digite o número: ")
     return rua, numero
 
+# Função para salvar os pedidos no arquivo 'pedidos.json'
 def salvar_pedidos(pedidos):
-    with open('pedidos.json', 'w') as file:
-        json.dump(pedidos, file)
+    try:
+        with open('pedidos.json', 'w') as file:
+            json.dump(pedidos, file, indent=4)
+    except Exception as e:
+        print(f"Erro ao salvar pedidos: {e}")
 
+# Função para carregar pedidos do arquivo 'pedidos.json'
 def carregar_pedidos():
     if os.path.exists('pedidos.json'):
-        with open('pedidos.json', 'r') as file:
-            return json.load(file)
+        try:
+            with open('pedidos.json', 'r') as file:
+                return json.load(file)
+        except json.JSONDecodeError:
+            print("Erro ao ler o arquivo de pedidos. O arquivo pode estar corrompido.")
+            return []
     return []
 
+# Função para salvar o estoque no arquivo 'estoque.json'
 def salvar_estoque(estoque):
-    with open('estoque.json', 'w') as file:
-        json.dump(estoque, file)
+    try:
+        with open('estoque.json', 'w') as file:
+            json.dump(estoque, file, indent=4)
+    except Exception as e:
+        print(f"Erro ao salvar estoque: {e}")
 
+# Função para carregar o estoque do arquivo 'estoque.json'
 def carregar_estoque():
     if os.path.exists('estoque.json'):
-        with open('estoque.json', 'r') as file:
-            return json.load(file)
+        try:
+            with open('estoque.json', 'r') as file:
+                return json.load(file)
+        except json.JSONDecodeError:
+            print("Erro ao ler o arquivo de estoque. O arquivo pode estar corrompido.")
+            return {}
     return {
         "Chocolate": 10,
         "Morango": 10,
@@ -48,25 +68,39 @@ def carregar_estoque():
         "Caramelo": 10,
     }
 
+# Função para processar o novo pedido
 def novo_pedido(pedidos, estoque):
     limpar_tela()
     print("\n--- Novo Pedido ---")
     compra(pedidos, estoque)
 
+# Função de compra
 def compra(pedidos, estoque):
     while True:
         sabores = menu_sabores(estoque)
-        escolha = int(input("\nQual sabor vai querer? : "))
+        try:
+            escolha = int(input("\nQual sabor vai querer? : "))
+            if escolha < 1 or escolha > len(sabores):
+                print("Opção inválida. Tente novamente.")
+                continue
+        except ValueError:
+            print("Entrada inválida. Por favor, insira um número.")
+            continue
+
         sabor_escolhido = sabores[escolha - 1]
-        
+
+        # Verificar se há estoque suficiente
         if estoque[sabor_escolhido] <= 0:
             print(f"Desculpe, {sabor_escolhido} está fora de estoque.")
             continue
 
-        quantidade = int(input(f"Quantos de {sabor_escolhido} você deseja? (Estoque disponível: {estoque[sabor_escolhido]}): "))
-        
-        if quantidade > estoque[sabor_escolhido] or quantidade <= 0:
-            print("Quantidade inválida. Tente novamente.")
+        try:
+            quantidade = int(input(f"Quantos de {sabor_escolhido} você deseja? (Estoque disponível: {estoque[sabor_escolhido]}): "))
+            if quantidade > estoque[sabor_escolhido] or quantidade <= 0:
+                print("Quantidade inválida. Tente novamente.")
+                continue
+        except ValueError:
+            print("Por favor, insira um número válido para a quantidade.")
             continue
 
         print(f"Sabor escolhido: {sabor_escolhido}, Quantidade: {quantidade}")
@@ -74,8 +108,12 @@ def compra(pedidos, estoque):
         print("Escolha a forma de pagamento:")
         print("1. Cartão")
         print("2. Dinheiro")
-        pagamento_opcao = int(input("Digite o número da opção: "))
-        pagamento = "Cartão" if pagamento_opcao == 1 else "Dinheiro"
+        try:
+            pagamento_opcao = int(input("Digite o número da opção: "))
+            pagamento = "Cartão" if pagamento_opcao == 1 else "Dinheiro"
+        except ValueError:
+            print("Opção inválida. Considerando como 'Dinheiro'.")
+            pagamento = "Dinheiro"
 
         entrega = input("É para entrega? (Sim/Não): ")
 
@@ -110,6 +148,7 @@ def compra(pedidos, estoque):
         else:
             break
 
+# Função para acessar o último pedido realizado
 def acessar_pedidos(pedidos):
     if not pedidos:
         print("Nenhum pedido encontrado.")
@@ -123,6 +162,7 @@ def acessar_pedidos(pedidos):
             print(f"  Endereço: {p['endereco']}")
         print()
 
+# Função para gerenciar o estoque (adicionar e remover itens)
 def gerenciar_estoque(estoque):
     while True:
         print("\n--- Gerenciamento de Estoque ---")
@@ -133,38 +173,51 @@ def gerenciar_estoque(estoque):
 
         if opcao == 1:
             sabor = input("Digite o sabor a adicionar: ")
-            quantidade = int(input("Digite a quantidade a adicionar: "))
-            if sabor in estoque:
-                estoque[sabor] += quantidade
-                print(f"Estoque de {sabor} atualizado para {estoque[sabor]}.")
-            else:
-                print("Sabor não encontrado.")
+            try:
+                quantidade = int(input("Digite a quantidade a adicionar: "))
+                if sabor in estoque:
+                    estoque[sabor] += quantidade
+                    print(f"Estoque de {sabor} atualizado para {estoque[sabor]}.")
+                else:
+                    print("Sabor não encontrado.")
+            except ValueError:
+                print("Por favor, insira um número válido para a quantidade.")
         elif opcao == 2:
             sabor = input("Digite o sabor a remover: ")
-            quantidade = int(input("Digite a quantidade a remover: "))
-            if sabor in estoque and estoque[sabor] >= quantidade:
-                estoque[sabor] -= quantidade
-                print(f"Estoque de {sabor} atualizado para {estoque[sabor]}.")
-            else:
-                print("Quantidade inválida ou sabor não encontrado.")
+            try:
+                quantidade = int(input("Digite a quantidade a remover: "))
+                if sabor in estoque and estoque[sabor] >= quantidade:
+                    estoque[sabor] -= quantidade
+                    print(f"Estoque de {sabor} atualizado para {estoque[sabor]}.")
+                else:
+                    print("Quantidade inválida ou sabor não encontrado.")
+            except ValueError:
+                print("Por favor, insira um número válido para a quantidade.")
         elif opcao == 3:
             salvar_estoque(estoque)
             break
         else:
             print("Opção inválida! Tente novamente.")
 
+# Programa principal
 if __name__ == "__main__":
     pedidos = carregar_pedidos()
     estoque = carregar_estoque()
-    
+
     while True:
         limpar_tela()
+
         print("1. Novo Pedido")
         print("2. Acessar Último Pedido")
         print("3. Gerenciar Estoque")
         print("4. Sair")
-        opcao = int(input("Escolha uma opção: "))
-        
+
+        try:
+            opcao = int(input("Escolha uma opção:"))
+        except ValueError:
+            print("Entrada inválida. Tente novamente.")
+            continue
+
         if opcao == 1:
             novo_pedido(pedidos, estoque)
         elif opcao == 2:
@@ -178,78 +231,61 @@ if __name__ == "__main__":
         else:
             print("Opção inválida! Tente novamente.")
 
--js-
 
+-js-
 const http = require('http');
 const fs = require('fs');
+const path = require('path');
 const porta = 3000;
-const filePath = 'estoque.json';
+const filePath = path.join(__dirname, 'estoque.json');
 
-function lerarquivo(){
+// Função para ler o arquivo de estoque
+function lerArquivo() {
     try {
-        const data = fs.readFileSync(filePath, 'utf8'); // Lê o arquivo de forma síncrona 
-        const jsonData = JSON.parse(data); // Converte o conteúdo para JSON 
-        return jsonData; // Retorna os dados
-    }
-    catch (erro) { 
-        console.error('Erro ao ler o arquivo:', erro); 
+        const data = fs.readFileSync(filePath, 'utf8'); // Lê o arquivo de forma síncrona
+        return JSON.parse(data); // Converte o conteúdo para JSON
+    } catch (erro) {
+        console.error('Erro ao ler o arquivo:', erro);
         return null; // Retorna null em caso de erro
-    } 
-}
-
-const server = http.createServer((req, res) => {
-    res.statusCode = 200;
-    res.setHeader('Content-Type', 'text/html');
-    estoque = lerarquivo();
-    console.log(estoque);
-    res.end("<a>"+estoque.nome+"</a>");
-})
-
-server.listen(porta, () => {
-    console.log(`Servidor rodando em http://localhost:${porta}/`);
-})
-
-/*
-function carregarEstoque() {
-    try {
-        const data = fs.readFileSync(filePath, 'utf8');
-        return JSON.parse(data);
-    } catch (error) {
-        console.error('Erro ao carregar o estoque:', error);
-        return {
-            //Estoque padrão
-        };
     }
 }
 
-function criarResposta(res, statusCode, contentType, data) {
-    res.statusCode = statusCode;
-    res.setHeader('Content-Type', contentType);
-    //const estoque = carregarEstoque();
-    //console.log(estoque);
-    res.end("oi");
-}
-
+// Criação do servidor HTTP
 const server = http.createServer((req, res) => {
     if (req.url === '/estoque' && req.method === 'GET') {
-       //const estoque = carregarEstoque();
-        criarResposta(res, 200, 'application/json', e);
+        const estoque = lerArquivo();
+        if (estoque) {
+            res.statusCode = 200;
+            res.setHeader('Content-Type', 'application/json');
+            res.end(JSON.stringify(estoque)); // Retorna o estoque como JSON
+        } else {
+            res.statusCode = 500;
+            res.setHeader('Content-Type', 'text/plain');
+            res.end('Erro ao carregar o estoque');
+        }
     } else {
-        criarResposta(res, 404, 'text/plain', { error: 'Rota não encontrada' });
+        res.statusCode = 404;
+        res.setHeader('Content-Type', 'text/plain');
+        res.end('Rota não encontrada');
     }
 });
 
+// Inicia o servidor
 server.listen(porta, () => {
     console.log(`Servidor rodando em http://localhost:${porta}/estoque`);
-});*/
-
-
+});
 
 
 
 
 
 {
-    "nome": "" 
-    
+    "Chocolate": 7,
+    "Morango": 10,
+    "Baunilha": 10,
+    "Floresta Negra": 10,
+    "Lim\u00e3o": 10,
+    "Coco": 10,
+    "Pistache": 10,
+    "Caramelo": 10
 }

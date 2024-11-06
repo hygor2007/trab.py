@@ -7,12 +7,12 @@ def limpar_tela():
     os.system('cls' if os.name == 'nt' else 'clear')
 
 # Função para exibir o menu de sabores
-def menu_sabores(estoque):
-    sabores = ["Chocolate", "Morango", "Baunilha", "Floresta Negra", "Limão", "Coco", "Pistache", "Caramelo"]
+def menu_sabores(valores):
+    sabores = list(valores.keys())  # Pegamos apenas as chaves (sabores)
     print("Sabores disponíveis:")
     for i, sabor in enumerate(sabores, 1):
-        quantidade = estoque.get(sabor, 0)
-        print(f"{i}. {sabor} (Estoque: {quantidade})")
+        valor = valores.get(sabor, 0)
+        print(f"{i}. {sabor} (Preço: R$ {valor:.2f})")
     return sabores
 
 # Função para coleta de dados de entrega
@@ -40,44 +40,45 @@ def carregar_pedidos():
             return []
     return []
 
-# Função para salvar o estoque no arquivo 'estoque.json'
-def salvar_estoque(estoque):
+# Função para salvar o valor dos sabores no arquivo 'valores.json'
+def salvar_valores(valores):
     try:
-        with open('estoque.json', 'w') as file:
-            json.dump(estoque, file, indent=4)
+        with open('valores.json', 'w') as file:
+            json.dump(valores, file, indent=4)
     except Exception as e:
-        print(f"Erro ao salvar estoque: {e}")
+        print(f"Erro ao salvar valores: {e}")
 
-# Função para carregar o estoque do arquivo 'estoque.json'
-def carregar_estoque():
-    if os.path.exists('estoque.json'):
+# Função para carregar os valores dos sabores do arquivo 'valores.json'
+def carregar_valores():
+    if os.path.exists('valores.json'):
         try:
-            with open('estoque.json', 'r') as file:
+            with open('valores.json', 'r') as file:
                 return json.load(file)
         except json.JSONDecodeError:
-            print("Erro ao ler o arquivo de estoque. O arquivo pode estar corrompido.")
+            print("Erro ao ler o arquivo de valores. O arquivo pode estar corrompido.")
             return {}
+    # Se o arquivo não existir, retorna valores iniciais com preços
     return {
-        "Chocolate": 10,
-        "Morango": 10,
-        "Baunilha": 10,
-        "Floresta Negra": 10,
-        "Limão": 10,
-        "Coco": 10,
-        "Pistache": 10,
-        "Caramelo": 10,
+        "Chocolate": 10.00,
+        "Morango": 8.50,
+        "Baunilha": 7.00,
+        "Floresta Negra": 12.00,
+        "Limão": 6.00,
+        "Coco": 9.00,
+        "Pistache": 15.00,
+        "Caramelo": 11.00,
     }
 
 # Função para processar o novo pedido
-def novo_pedido(pedidos, estoque):
+def novo_pedido(pedidos, valores):
     limpar_tela()
     print("\n--- Novo Pedido ---")
-    compra(pedidos, estoque)
+    compra(pedidos, valores)
 
 # Função de compra
-def compra(pedidos, estoque):
+def compra(pedidos, valores):
     while True:
-        sabores = menu_sabores(estoque)
+        sabores = menu_sabores(valores)
         try:
             escolha = int(input("\nQual sabor vai querer? : "))
             if escolha < 1 or escolha > len(sabores):
@@ -89,14 +90,12 @@ def compra(pedidos, estoque):
 
         sabor_escolhido = sabores[escolha - 1]
 
-        # Verificar se há estoque suficiente
-        if estoque[sabor_escolhido] <= 0:
-            print(f"Desculpe, {sabor_escolhido} está fora de estoque.")
-            continue
+        # Adicionando R$ 3,00 ao preço de cada sabor
+        preco_sabor = valores[sabor_escolhido] + 3.00
 
         try:
-            quantidade = int(input(f"Quantos de {sabor_escolhido} você deseja? (Estoque disponível: {estoque[sabor_escolhido]}): "))
-            if quantidade > estoque[sabor_escolhido] or quantidade <= 0:
+            quantidade = int(input(f"Quantos de {sabor_escolhido} você deseja? (Preço por unidade: R$ {preco_sabor:.2f}): "))
+            if quantidade <= 0:
                 print("Quantidade inválida. Tente novamente.")
                 continue
         except ValueError:
@@ -104,6 +103,10 @@ def compra(pedidos, estoque):
             continue
 
         print(f"Sabor escolhido: {sabor_escolhido}, Quantidade: {quantidade}")
+        
+        # Calculando o valor total da compra
+        valor_total = preco_sabor * quantidade
+        print(f"Valor total para {quantidade} x {sabor_escolhido}: R$ {valor_total:.2f}")
 
         print("Escolha a forma de pagamento:")
         print("1. Cartão")
@@ -127,23 +130,23 @@ def compra(pedidos, estoque):
         pedido = {
             'sabor': sabor_escolhido,
             'quantidade': quantidade,
+            'valor_total': valor_total,
             'pagamento': pagamento,
             'entrega': entrega,
             'endereco': endereco
         }
         pedidos.append(pedido)
 
-        # Atualizar estoque
-        estoque[sabor_escolhido] -= quantidade
         salvar_pedidos(pedidos)
-        salvar_estoque(estoque)
+        salvar_valores(valores)
 
         print("Compra concluída!")
         print(f"Sabor: {sabor_escolhido}, Quantidade: {quantidade}, Pagamento: {pagamento}, Entrega: {entrega}")
+        print(f"Valor Total: R$ {valor_total:.2f}")
 
         continuar = input("Deseja abrir um novo pedido? (Sim/Não): ")
         if continuar.lower() == "sim":
-            novo_pedido(pedidos, estoque)
+            novo_pedido(pedidos, valores)
             break
         else:
             break
@@ -156,61 +159,24 @@ def acessar_pedidos(pedidos):
         p = pedidos[-1]  # Pega o último pedido
         print("\n--- Último Pedido Realizado ---")
         print(f"  Sabor: {p['sabor']}, Quantidade: {p['quantidade']}")
+        print(f"  Valor Total: R$ {p['valor_total']:.2f}")
         print(f"  Pagamento: {p['pagamento']}")
         print(f"  Entrega: {p['entrega']}")
         if p['entrega'].lower() == "sim":
             print(f"  Endereço: {p['endereco']}")
         print()
 
-# Função para gerenciar o estoque (adicionar e remover itens)
-def gerenciar_estoque(estoque):
-    while True:
-        print("\n--- Gerenciamento de Estoque ---")
-        print("1. Adicionar Estoque")
-        print("2. Remover Estoque")
-        print("3. Voltar")
-        opcao = int(input("Escolha uma opção: "))
-
-        if opcao == 1:
-            sabor = input("Digite o sabor a adicionar: ")
-            try:
-                quantidade = int(input("Digite a quantidade a adicionar: "))
-                if sabor in estoque:
-                    estoque[sabor] += quantidade
-                    print(f"Estoque de {sabor} atualizado para {estoque[sabor]}.")
-                else:
-                    print("Sabor não encontrado.")
-            except ValueError:
-                print("Por favor, insira um número válido para a quantidade.")
-        elif opcao == 2:
-            sabor = input("Digite o sabor a remover: ")
-            try:
-                quantidade = int(input("Digite a quantidade a remover: "))
-                if sabor in estoque and estoque[sabor] >= quantidade:
-                    estoque[sabor] -= quantidade
-                    print(f"Estoque de {sabor} atualizado para {estoque[sabor]}.")
-                else:
-                    print("Quantidade inválida ou sabor não encontrado.")
-            except ValueError:
-                print("Por favor, insira um número válido para a quantidade.")
-        elif opcao == 3:
-            salvar_estoque(estoque)
-            break
-        else:
-            print("Opção inválida! Tente novamente.")
-
 # Programa principal
 if __name__ == "__main__":
     pedidos = carregar_pedidos()
-    estoque = carregar_estoque()
+    valores = carregar_valores()
 
     while True:
         limpar_tela()
 
         print("1. Novo Pedido")
         print("2. Acessar Último Pedido")
-        print("3. Gerenciar Estoque")
-        print("4. Sair")
+        print("3. Sair")
 
         try:
             opcao = int(input("Escolha uma opção:"))
@@ -219,17 +185,15 @@ if __name__ == "__main__":
             continue
 
         if opcao == 1:
-            novo_pedido(pedidos, estoque)
+            novo_pedido(pedidos, valores)
         elif opcao == 2:
             acessar_pedidos(pedidos)
             input("Pressione Enter para continuar...")
         elif opcao == 3:
-            gerenciar_estoque(estoque)
-        elif opcao == 4:
-            salvar_estoque(estoque)
             break
         else:
             print("Opção inválida! Tente novamente.")
+
 
 -js-
 const http = require('http');
@@ -255,7 +219,7 @@ const server = http.createServer((req, res) => {
         const estoque = lerArquivo();
         if (estoque) {
             res.statusCode = 200;
-            res.setHeader('Content-Type', 'application/json');
+            res.setHeader('Content-Type', 'application/html');
             res.end(estoque.Chocolate+"<br/>"+estoque.morango); // Retorna o estoque como JSON
         
         } else {
@@ -280,12 +244,12 @@ server.listen(porta, () => {
 
 
 {
-    "Chocolate": 7,
-    "Morango": 10,
-    "Baunilha": 10,
-    "Floresta Negra": 10,
-    "Lim\u00e3o": 10,
-    "Coco": 10,
-    "Pistache": 10,
-    "Caramelo": 10
+    "Chocolate": 1.0,
+    "Morango": 1.5,
+    "Baunilha": 1.0,
+    "Floresta Negra": 1.0,
+    "Lim\u00e3o": 1.0,
+    "Coco": 1.0,
+    "Pistache": 1.0,
+    "Caramelo": 1.0
 }

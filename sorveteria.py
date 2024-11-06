@@ -231,7 +231,6 @@ if __name__ == "__main__":
         else:
             print("Opção inválida! Tente novamente.")
 
-
 -js-
 const http = require('http');
 const fs = require('fs');
@@ -257,7 +256,8 @@ const server = http.createServer((req, res) => {
         if (estoque) {
             res.statusCode = 200;
             res.setHeader('Content-Type', 'application/json');
-            res.end(JSON.stringify(estoque)); // Retorna o estoque como JSON
+            res.end(estoque.Chocolate+"<br/>"+estoque.morango); // Retorna o estoque como JSON
+        
         } else {
             res.statusCode = 500;
             res.setHeader('Content-Type', 'text/plain');
